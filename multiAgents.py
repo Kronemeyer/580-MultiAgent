@@ -23,7 +23,7 @@ class ReflexAgent(Agent):
     A reflex agent chooses an action at each choice point by examining
     its alternatives via a state evaluation function.
 
-    The code below is provided as a guide.  You are welcome to change
+    The code below giis provided as a guide.  You are welcome to change
     it in any way you see fit, so long as you don't touch our method
     headers.
     """
@@ -71,8 +71,40 @@ class ReflexAgent(Agent):
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
+     
+     # TODO - ignore this if ghosts are scared
+        for ghost in newGhostStates:
+            gPos = ghost.getPosition()
+            gDir = ghost.getDirection()
+            x = newPos[0] - gPos[0]
+            y = newPos[1] - gPos[1]
+            if (abs(x) + abs(y) <= 1):
+                if (action == 'Stop'):
+                    return -5000
+                elif (x == -1 and action == 'East' and gDir == 'West'):
+                    return -10000
+                elif (x == 1 and action == 'West' and gDir == 'East'):
+                    return -10000
+                elif (y == -1 and action == 'North' and gDir == 'South'):
+                    return -10000
+                elif (y == 1 and action == 'South' and gDir == 'North'):
+                    return -10000
+        '''
+        for x in newGhostStates:
+            pos = x.getPosition()
+            dire = x.getDirection()
+            dis = manhattanDistance(pac,pos)
+            if (dis == 1):
+                if (pos[0] == pac[0]-1 and dire == "East"):
+                    return -999
+                if (pos[0] == pac[0]+1 and dire == "West"):
+                    return -999
+                if (pos[1] == pac[1]-1 and dire == "North"):
+                    return -999
+                if (pos[1] == pac[1]+1 and dire == "South"):
+                    return -999
+        '''
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-
         "*** YOUR CODE HERE ***"
         return successorGameState.getScore()
 
