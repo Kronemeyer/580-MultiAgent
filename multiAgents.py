@@ -72,8 +72,17 @@ class ReflexAgent(Agent):
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-
-        "*** YOUR CODE HERE ***"
+        g = 0
+        for ghost in newGhostStates:
+            gPos = ghost.getPosition()
+            x = newPos[0] - gPos[0]
+            y = newPos[1] - gPos[1]
+            flag = 1
+            if (newScaredTimes[g] > 0):
+                flag = -1;
+            g += 1
+            if (abs(x) + abs(y) <= 1):
+                return -10000 * flag
         return successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
