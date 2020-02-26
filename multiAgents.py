@@ -15,6 +15,7 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
+import pdb
 
 from game import Agent
 
@@ -71,42 +72,40 @@ class ReflexAgent(Agent):
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
-     
-     # TODO - ignore this if ghosts are scared
+        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        score = successorGameState.getScore()
+
+        if (action == 'East'):
+            newPos = (newPos[0]+1,newPos[1])
+        elif (action == 'West'):
+            newPos = (newPos[0]-1,newPos[1])
+        elif (action == 'North'):
+            newPos = (newPos[0],newPos[1]+1)
+        elif (action == 'South'):
+            newPos = (newPos[0],newPos[1]-1)
+
+        c = 0
         for ghost in newGhostStates:
             gPos = ghost.getPosition()
             gDir = ghost.getDirection()
+            if (gDir == 'East'):
+                gPos = (gPos[0]+1,gPos[1])
+            elif (gDir == 'West'):
+                gPos = (gPos[0]-1,gPos[1])
+            elif (gDir == 'North'):
+                gPos = (gPos[0],gPos[1]+1)
+            elif (gDir == 'South'):
+                gPos = (gPos[0],gPos[1]-1)
             x = newPos[0] - gPos[0]
             y = newPos[1] - gPos[1]
-            if (abs(x) + abs(y) <= 1):
-                if (action == 'Stop'):
-                    return -5000
-                elif (x == -1 and action == 'East' and gDir == 'West'):
-                    return -10000
-                elif (x == 1 and action == 'West' and gDir == 'East'):
-                    return -10000
-                elif (y == -1 and action == 'North' and gDir == 'South'):
-                    return -10000
-                elif (y == 1 and action == 'South' and gDir == 'North'):
-                    return -10000
-        '''
-        for x in newGhostStates:
-            pos = x.getPosition()
-            dire = x.getDirection()
-            dis = manhattanDistance(pac,pos)
-            if (dis == 1):
-                if (pos[0] == pac[0]-1 and dire == "East"):
-                    return -999
-                if (pos[0] == pac[0]+1 and dire == "West"):
-                    return -999
-                if (pos[1] == pac[1]-1 and dire == "North"):
-                    return -999
-                if (pos[1] == pac[1]+1 and dire == "South"):
-                    return -999
-        '''
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+            flag = 1
+            if (newScaredTimes[c] > 1):
+                flag = -1
+            c += 1
+            if (abs(x) + abs(y) == 0):
+                score += -10000*flag
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        return score
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -167,7 +166,39 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maxPac(gamestate,depth):
+            if gamestate.isWin() or gamestate.isLose() or depth == 0:
+                return self.evaluationFunction(gamestate)
+            score = -99999
+            pMoves = gamestate.getLegalActions(0)
+            for moves in pMoves:
+                score = max(score,minGhost(gamestate.generateSuccessor(0,moves),1,depth-1))
+            return score
+        
+        def minGhost(gamestate,ghost,depth):
+            if gamestate.isWin() or gamestate.isLose() or depth == 0:
+                return self.evaluationFunction(gamestate)
+            score = 99999
+            numGhosts = gamestate.getNumAgents()-1
+            actions = gamestate.getLegalActions(ghost)
+            while ghost != numGhosts:
+                for move in actions:
+                    score = min(score, minGhost(gamestate.generateSuccessor(ghost,move),ghost+1))
+            for move in actions:
+                score = maxPac(gameState.generateSuccessor(ghost,move),depth-1)
+            return score
+        
+        temp,score = -99999,-99999
+        actions = gameState.getLegalActions()
+        retval = actions[0]
+        for move in actions:
+            score = max(score,minGhost(gameState.generateSuccessor(0,move),1,self.depth))
+            if score > temp:
+                temp = score
+                retval = move 
+
+        return retval
+            
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
