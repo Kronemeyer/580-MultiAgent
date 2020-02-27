@@ -196,37 +196,48 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        def maxPac(state,numGhosts,depth):
+        def maxPac(state,numGhosts,depth,alpha,beta):
             if state.isWin() or state.isLose() or depth == 0:
                 return self.evaluationFunction(state)
             score = -float('inf')
             temp = score
             pMoves = state.getLegalActions(0)
             for move in pMoves:
-                score = max(score,minGhost(state.generateSuccessor(0,move),1,numGhosts,depth))
+                score = max(score,minGhost(state.generateSuccessor(0,move),1,numGhosts,depth,alpha,beta))
+                if score >= beta:
+                    return score
+                alpha = max(alpha,score)
             return score
 
         
-        def minGhost(state,ghost,numGhosts,depth):
+        def minGhost(state,ghost,numGhosts,depth,alpha,beta):
             if state.isWin() or state.isLose() or depth == 0:
                 return self.evaluationFunction(state)
             score = float('inf')
             gMoves = state.getLegalActions(ghost)
             if ghost < numGhosts:
                 for move in gMoves:
-                    score = min(score,minGhost(state.generateSuccessor(ghost,move),ghost+1,numGhosts,depth))
+                    score = min(score,minGhost(state.generateSuccessor(ghost,move),ghost+1,numGhosts,depth,alpha,beta))
+                    if score <= alpha:
+                        return score
+                    beta = min(beta,score)
             else:
                 for move in gMoves:
-                    score = min(score, maxPac(state.generateSuccessor(ghost,move),numGhosts,depth-1))
+                    score = min(score, maxPac(state.generateSuccessor(ghost,move),numGhosts,depth-1,alpha,beta))
+                    if score <= alpha:
+                        return score
+                    beta = min(beta,score)
             return score
 
         score = -float('inf')
         temp = score
+        alpha = temp
+        beta = float('inf')
         pMoves = gameState.getLegalActions(0)
         numGhosts = gameState.getNumAgents()-1
         action = None
         for move in pMoves:
-            score = max(score,minGhost(gameState.generateSuccessor(0,move),1,numGhosts,self.depth))
+            score = max(score,minGhost(gameState.generateSuccessor(0,move),1,numGhosts,self.depth,alpha,beta))
             if score > temp:
                 temp = score
                 action = move
