@@ -241,6 +241,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             if score > temp:
                 temp = score
                 action = move
+            if score >= beta:
+                action = move
+                return action
+            alpha = max(alpha,score)
         return action
         util.raiseNotDefined()
 
