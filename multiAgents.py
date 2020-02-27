@@ -156,9 +156,8 @@ class MinimaxAgent(MultiAgentSearchAgent):
             score = -float('inf')
             temp = score
             pMoves = state.getLegalActions(0)
-            action = None
             for move in pMoves:
-                score = max(score,minGhost(state.generateSuccessor(0,move),1,numGhosts,depth-1))
+                score = max(score,minGhost(state.generateSuccessor(0,move),1,numGhosts,depth))
             return score
 
         
