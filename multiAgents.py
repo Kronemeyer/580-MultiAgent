@@ -196,6 +196,41 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
+        def maxPac(state,numGhosts,depth):
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+            score = -float('inf')
+            temp = score
+            pMoves = state.getLegalActions(0)
+            for move in pMoves:
+                score = max(score,minGhost(state.generateSuccessor(0,move),1,numGhosts,depth))
+            return score
+
+        
+        def minGhost(state,ghost,numGhosts,depth):
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+            score = float('inf')
+            gMoves = state.getLegalActions(ghost)
+            if ghost < numGhosts:
+                for move in gMoves:
+                    score = min(score,minGhost(state.generateSuccessor(ghost,move),ghost+1,numGhosts,depth))
+            else:
+                for move in gMoves:
+                    score = min(score, maxPac(state.generateSuccessor(ghost,move),numGhosts,depth-1))
+            return score
+
+        score = -float('inf')
+        temp = score
+        pMoves = gameState.getLegalActions(0)
+        numGhosts = gameState.getNumAgents()-1
+        action = None
+        for move in pMoves:
+            score = max(score,minGhost(gameState.generateSuccessor(0,move),1,numGhosts,self.depth))
+            if score > temp:
+                temp = score
+                action = move
+        return action
         util.raiseNotDefined()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
