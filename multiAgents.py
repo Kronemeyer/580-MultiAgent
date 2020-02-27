@@ -15,6 +15,7 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
+import pdb
 
 from game import Agent
 
@@ -23,7 +24,7 @@ class ReflexAgent(Agent):
     A reflex agent chooses an action at each choice point by examining
     its alternatives via a state evaluation function.
 
-    The code below is provided as a guide.  You are welcome to change
+    The code below giis provided as a guide.  You are welcome to change
     it in any way you see fit, so long as you don't touch our method
     headers.
     """
@@ -149,7 +150,41 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maxPac(state,numGhosts,depth):
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+            score = -float('inf')
+            temp = score
+            pMoves = state.getLegalActions(0)
+            for move in pMoves:
+                score = max(score,minGhost(state.generateSuccessor(0,move),1,numGhosts,depth))
+            return score
+
+        
+        def minGhost(state,ghost,numGhosts,depth):
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+            score = float('inf')
+            gMoves = state.getLegalActions(ghost)
+            if ghost < numGhosts:
+                for move in gMoves:
+                    score = min(score,minGhost(state.generateSuccessor(ghost,move),ghost+1,numGhosts,depth))
+            else:
+                for move in gMoves:
+                    score = min(score, maxPac(state.generateSuccessor(ghost,move),numGhosts,depth-1))
+            return score
+
+        score = -float('inf')
+        temp = score
+        pMoves = gameState.getLegalActions(0)
+        numGhosts = gameState.getNumAgents()-1
+        action = None
+        for move in pMoves:
+            score = max(score,minGhost(gameState.generateSuccessor(0,move),1,numGhosts,self.depth))
+            if score > temp:
+                temp = score
+                action = move
+        return action
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
