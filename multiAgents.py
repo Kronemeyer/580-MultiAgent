@@ -73,39 +73,23 @@ class ReflexAgent(Agent):
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-        score = successorGameState.getScore()
-
-        if (action == 'East'):
-            newPos = (newPos[0]+1,newPos[1])
-        elif (action == 'West'):
-            newPos = (newPos[0]-1,newPos[1])
-        elif (action == 'North'):
-            newPos = (newPos[0],newPos[1]+1)
-        elif (action == 'South'):
-            newPos = (newPos[0],newPos[1]-1)
-
-        c = 0
+        "*** YOUR CODE HERE ***"
+        if (newPos in successorGameState.getCapsules()):
+            return 10000
+        pts = 0
+        oldPos = currentGameState.getPacmanPosition()
+        g = 0
         for ghost in newGhostStates:
             gPos = ghost.getPosition()
-            gDir = ghost.getDirection()
-            if (gDir == 'East'):
-                gPos = (gPos[0]+1,gPos[1])
-            elif (gDir == 'West'):
-                gPos = (gPos[0]-1,gPos[1])
-            elif (gDir == 'North'):
-                gPos = (gPos[0],gPos[1]+1)
-            elif (gDir == 'South'):
-                gPos = (gPos[0],gPos[1]-1)
-            x = newPos[0] - gPos[0]
-            y = newPos[1] - gPos[1]
+            oldDist = abs(oldPos[0] - gPos[0]) + abs(oldPos[1] - gPos[1])
+            newDist = abs(newPos[0] - gPos[0]) + abs(newPos[1] - gPos[1])
             flag = 1
-            if (newScaredTimes[c] > 1):
+            if (newScaredTimes[g] > 0):
                 flag = -1
-            c += 1
-            if (abs(x) + abs(y) == 0):
-                score += -10000*flag
-        "*** YOUR CODE HERE ***"
-        return score
+            pts += (oldDist - newDist)
+            if (newDist <= 1):
+                return -5000 * flag
+        return successorGameState.getScore() + pts
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -166,39 +150,42 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        def maxPac(gamestate,depth):
-            if gamestate.isWin() or gamestate.isLose() or depth == 0:
-                return self.evaluationFunction(gamestate)
-            score = -99999
-            pMoves = gamestate.getLegalActions(0)
-            for moves in pMoves:
-                score = max(score,minGhost(gamestate.generateSuccessor(0,moves),1,depth-1))
+        def maxPac(state,numGhosts,depth):
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+            score = -float('inf')
+            temp = score
+            pMoves = state.getLegalActions(0)
+            action = None
+            for move in pMoves:
+                score = max(score,minGhost(state.generateSuccessor(0,move),1,numGhosts,depth-1))
             return score
+
         
-        def minGhost(gamestate,ghost,depth):
-            if gamestate.isWin() or gamestate.isLose() or depth == 0:
-                return self.evaluationFunction(gamestate)
-            score = 99999
-            numGhosts = gamestate.getNumAgents()-1
-            actions = gamestate.getLegalActions(ghost)
-            while ghost != numGhosts:
-                for move in actions:
-                    score = min(score, minGhost(gamestate.generateSuccessor(ghost,move),ghost+1))
-            for move in actions:
-                score = maxPac(gameState.generateSuccessor(ghost,move),depth-1)
+        def minGhost(state,ghost,numGhosts,depth):
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+            score = float('inf')
+            gMoves = state.getLegalActions(ghost)
+            if ghost < numGhosts:
+                for move in gMoves:
+                    score = min(score,minGhost(state.generateSuccessor(ghost,move),ghost+1,numGhosts,depth))
+            else:
+                for move in gMoves:
+                    score = min(score, maxPac(state.generateSuccessor(ghost,move),numGhosts,depth-1))
             return score
-        
-        temp,score = -99999,-99999
-        actions = gameState.getLegalActions()
-        retval = actions[0]
-        for move in actions:
-            score = max(score,minGhost(gameState.generateSuccessor(0,move),1,self.depth))
+
+        score = -float('inf')
+        temp = score
+        pMoves = gameState.getLegalActions(0)
+        numGhosts = gameState.getNumAgents()-1
+        action = None
+        for move in pMoves:
+            score = max(score,minGhost(gameState.generateSuccessor(0,move),1,numGhosts,self.depth))
             if score > temp:
                 temp = score
-                retval = move 
-
-        return retval
-            
+                action = move
+        return action
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
