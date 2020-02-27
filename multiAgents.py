@@ -218,13 +218,13 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             if ghost < numGhosts:
                 for move in gMoves:
                     score = min(score,minGhost(state.generateSuccessor(ghost,move),ghost+1,numGhosts,depth,alpha,beta))
-                    if score <= alpha:
+                    if score < alpha:
                         return score
                     beta = min(beta,score)
             else:
                 for move in gMoves:
                     score = min(score, maxPac(state.generateSuccessor(ghost,move),numGhosts,depth-1,alpha,beta))
-                    if score <= alpha:
+                    if score < alpha:
                         return score
                     beta = min(beta,score)
             return score
