@@ -204,7 +204,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             pMoves = state.getLegalActions(0)
             for move in pMoves:
                 score = max(score,minGhost(state.generateSuccessor(0,move),1,numGhosts,depth,alpha,beta))
-                if score >= beta:
+                if score > beta:
                     return score
                 alpha = max(alpha,score)
             return score
