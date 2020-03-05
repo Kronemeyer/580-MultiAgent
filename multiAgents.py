@@ -87,6 +87,7 @@ class ReflexAgent(Agent):
             if (newScaredTimes[g] > 0):
                 flag = -1
             pts += (oldDist - newDist)
+            g += 1
             if (newDist <= 1):
                 return -5000 * flag
         return successorGameState.getScore() + pts
@@ -166,11 +167,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 return self.evaluationFunction(state)
             score = float('inf')
             gMoves = state.getLegalActions(ghost)
-            if ghost < numGhosts:
-                for move in gMoves:
+            for move in gMoves:
+                if ghost < numGhosts:
                     score = min(score,minGhost(state.generateSuccessor(ghost,move),ghost+1,numGhosts,depth))
-            else:
-                for move in gMoves:
+                else:
                     score = min(score, maxPac(state.generateSuccessor(ghost,move),numGhosts,depth-1))
             return score
 
@@ -215,14 +215,13 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 return self.evaluationFunction(state)
             score = float('inf')
             gMoves = state.getLegalActions(ghost)
-            if ghost < numGhosts:
-                for move in gMoves:
+            for move in gMoves:
+                if ghost < numGhosts:
                     score = min(score,minGhost(state.generateSuccessor(ghost,move),ghost+1,numGhosts,depth,alpha,beta))
                     if score < alpha:
                         return score
                     beta = min(beta,score)
-            else:
-                for move in gMoves:
+                else:
                     score = min(score, maxPac(state.generateSuccessor(ghost,move),numGhosts,depth-1,alpha,beta))
                     if score < alpha:
                         return score
@@ -278,12 +277,10 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             score = 0
             gMoves = state.getLegalActions(ghost)
             p = 1/len(gMoves)
-            if ghost < numGhosts:
-                for move in gMoves:
+            for move in gMoves:
+                if ghost < numGhosts:
                     score += p*expGhost(state.generateSuccessor(ghost,move),ghost+1,numGhosts,depth)
-
-            else:
-                for move in gMoves:
+                else:
                     score += p*maxPac(state.generateSuccessor(ghost,move),numGhosts,depth-1)
             return score
 
@@ -305,10 +302,52 @@ def betterEvaluationFunction(currentGameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: 
+
+    Reading the official description of the ai projects at http://ai.berkeley.edu/multiagent.html
+    gave the hint to return a linear combination of features that we consider important to the game.
+    Additionally, the hint to use reciprocal values was also given there.
+    Therefore, we used the reciprocal values to return higher numbers based on all food, capsules, 
+    and ghosts in the game. As these are really the only three things needed to complete the game
+    no other information was considered.
+
+    For the linear combination we weighted food the highest, at 2 times value, capsules second highest,
+    at 1.5 times value, and ghosts the lowest (as all we need to do is avoid them), at .35
+
+    I wish I could say I have a mathematical reasoning for using these values, but I dont. In reality 
+    these were the best values that I could come up with when altering them to see their effects.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    score = currentGameState.getScore()
+    pac = currentGameState.getPacmanPosition()
+    
+    # distance to foods
+    food = 0
+    foodList = currentGameState.getFood().asList()
+    for foods in foodList:
+        food += 1/manhattanDistance(pac,foods)
+
+    # distance to capsules
+    capsule = 0
+    for blob in currentGameState.getCapsules():
+        capsule += 1/manhattanDistance(pac,blob)
+
+    #distance to ghosts
+    adv,g = 0,0
+    newScaredTimes = [ghostState.scaredTimer for ghostState in currentGameState.getGhostStates()]
+    for ghost in currentGameState.getGhostStates():
+        gPos = ghost.getPosition()
+        flag = 1
+        if (newScaredTimes[g] > 0):
+            flag = -1
+        demon = manhattanDistance(pac,gPos)
+        if (demon == 0):
+            demon = float('inf')
+        adv += flag*(1/demon)
+        g += 1
+    
+    return score + 2*food + 1.5*capsule + .35*adv
 
 # Abbreviation
 better = betterEvaluationFunction
